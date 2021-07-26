@@ -7,14 +7,16 @@
 # 3-5 year: 30%
 # 5-10 year: 20%
 
-install.packages("tidyverse")
-install.packages("survminer")
+# install.packages("tidyverse")
+# install.packages("survminer")
 library(tidyverse)
 library(readxl)
 library(magrittr)
+library(survival)
 library(survminer)
 
-#load data fron one-drive
+
+#load data from one-drive
 onedrive_root<-file.path("C:","Users",
                          "xsm7f" #user1
                          # "sxing" #user2
@@ -25,17 +27,22 @@ alsa_dat<-read_xlsx(file.path(onedrive_root,
                               "#Grants",
                               "Analyses",
                               "ALS_registry_data",
-                              "ALSA Mid America dataset 112520.xlsx")) %>%
-  select(`Diagnosis to death (m)`) %>%
+                              # "ALSA Mid America dataset 112520.xlsx"
+                              "ALSA_calender year included 071521.xlsx"
+                              )) %>%
+  select(`Death - symptom onset (m)`,`Onset year`) %>%
   mutate(row_id=1:n(),
          status=1) %>%
-  rename(time=`Diagnosis to death (m)`)
+  rename(time=`Death - symptom onset (m)`,calyr=`Onset year`) %>%
+  filter(!is.na(time))
 
 survfit(Surv(time, status) ~ 1, data = alsa_dat)
+survfit(Surv(time, status) ~ calyr, data = alsa_dat)
 
-yr<-c(2,3,5)
-surv<-c(0.5,0.3,0.2)
-time_rg<-list(c(1,4),c(3,6),c(5,11))
+#specify simulation parameters
+yr<-c(2,3,5,10)
+surv<-c(0.5,0.3,0.2,0.1)
+time_rg<-list(c(1,3),c(3,5),c(5,10),c(10,20))
 N<-nrow(alsa_dat)
 
 alsa_sim<-c()
